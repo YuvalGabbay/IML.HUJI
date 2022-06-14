@@ -1,8 +1,7 @@
 from typing import NoReturn
-from ...base import BaseEstimator
+from IMLearn.base import BaseEstimator
 import numpy as np
 from numpy.linalg import det, inv
-
 
 class LDA(BaseEstimator):
     """
@@ -46,7 +45,20 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+
+        unique_arr,count=np.unique(y, return_counts=True)
+        self.classes_=unique_arr
+        self.mu_=np.ndarray((len(self.classes_),(X.shape[1])))
+        self.cov_ = np.zeros(((X.shape[1]), (X.shape[1])))
+        for i in self.classes_:
+            curr_mean=np.mean(X[y == i], axis=0)
+            self.mu_[i]=curr_mean
+            x_mu=X[y==i]-np.transpose(self.mu_[i])
+            self.cov_+=np.transpose(x_mu)@x_mu/(len(y)-len(self.classes_))
+
+        self._cov_inv=inv(self.cov_)
+        self.pi_=count/len(y)
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +74,11 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        likelihood=self.likelihood(X)
+        responses=np.argmax(likelihood,axis=1)
+        return responses
+
+
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -82,7 +98,15 @@ class LDA(BaseEstimator):
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        likelihood=np.zeros((len(X), len(self.classes_)))
+        for sample in range(len(X)):
+            for k in range (len(self.classes_)):
+                a_k=self._cov_inv@self.mu_[k]
+                b_k=np.log(self.pi_[k])-0.5 * self.mu_[k] @ self._cov_inv @ self.mu_[k]
+                likelihood[sample][k]=np.transpose(a_k)@X[sample]+b_k
+        return likelihood
+
+
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -102,4 +126,6 @@ class LDA(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        return misclassification_error(y,self._predict(X))
+
+

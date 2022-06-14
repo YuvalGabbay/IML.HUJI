@@ -50,7 +50,7 @@ class AdaBoost(BaseEstimator):
             Responses of input data to fit to
         """
         self.D_=np.ones((self.iterations_,len(X)))
-        self.D_[0]/=X.shape[0]
+        self.D_[0]=self.D_[0]/X.shape[0]
         self.models_=[]
         self.weights_=np.zeros(len(X))
 
@@ -60,10 +60,10 @@ class AdaBoost(BaseEstimator):
             self.models_.append(learner)
             epsilon=np.sum(self.D_[t][y!=learner.predict(X)])
             self.weights_[t]=0.5 * np.log((1-epsilon)/epsilon)
-            if t<(self.iterations_-1):
+            if t < (self.iterations_-1):
                 y_pred=learner.predict(X)
                 self.D_[t+1]=self.D_[t]*np.exp(-y * self.weights_[t] * y_pred)
-                self.D_[t+1]/=np.sum(self.D_[t+1])
+                self.D_[t+1]=self.D_[t+1]/np.sum(self.D_[t+1])
 
 
     def _predict(self, X):

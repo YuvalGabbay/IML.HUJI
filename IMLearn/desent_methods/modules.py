@@ -18,6 +18,7 @@ class L2(BaseModule):
             Initial value of weights
         """
         super().__init__(weights)
+        self.weights=weights
 
     def compute_output(self, **kwargs) -> np.ndarray:
         """
@@ -33,7 +34,7 @@ class L2(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        return np.linalg.norm(self.weights)
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """

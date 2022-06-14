@@ -48,8 +48,8 @@ class DecisionStump(BaseEstimator):
             if curr_error < min_error:
                 self.threshold_ = curr_threshold
                 self.j_ = feature
-                self.sign_ = sign
                 min_error = curr_error
+                self.sign_ = sign
 
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -82,6 +82,11 @@ class DecisionStump(BaseEstimator):
     @staticmethod
     def misclassification_error(y, y_pred):
         """
+        y : ndarray of shape (n_samples, )
+            Responses of input data to fit to
+        y_pred :  : ndarray of shape (n_samples, )
+            Predicted responses of input data to fit to
+
         return: the weighted loss of the predicted labels
         """
         weighted_loss = np.sum(np.where(np.sign(y) != np.sign(y_pred), np.abs(y), 0))

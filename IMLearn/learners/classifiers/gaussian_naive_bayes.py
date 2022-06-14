@@ -39,7 +39,16 @@ class GaussianNaiveBayes(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        unique_arr, count = np.unique(y, return_counts=True)
+        self.classes_ = unique_arr
+        self.mu_ = np.ndarray((len(self.classes_), (X.shape[1])))
+        self.vars_ = np.zeros((len(self.classes_), (X.shape[1])))
+        for i in self.classes_:
+            curr_mean = np.mean(X[y == i], axis=0)
+            self.mu_[i] = curr_mean
+            self.vars_[i]=np.var(X[y==i],axis=0, ddof=1)
+
+        self.pi_ = count / len(y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -55,7 +64,9 @@ class GaussianNaiveBayes(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        likelihood = self.likelihood(X)
+        responses = np.argmax(likelihood, axis=1)
+        return responses
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -75,7 +86,17 @@ class GaussianNaiveBayes(BaseEstimator):
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        likelihood=np.zeros((len(X),len(self.classes_)))
+        cov_k = np.zeros((X.shape[1], X.shape[1]))
+        for i in range(len(X)):
+            for k in self.classes_:
+                np.fill_diagonal(cov_k,self.vars_[k])
+                cov_k_inv=np.linalg.inv(cov_k)
+                scalar = 1 / np.sqrt(pow((2 * np.pi), X.shape[1]) * np.linalg.det(cov_k))
+                exp = np.exp(-0.5*(X[i]-self.mu_[k])@cov_k_inv@(X[i]-self.mu_[k]))
+
+                likelihood[i][k]=scalar*exp*self.pi_[k]
+        return likelihood
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -95,4 +116,5 @@ class GaussianNaiveBayes(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        return misclassification_error(y, self._predict(X))
+

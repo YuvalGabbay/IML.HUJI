@@ -52,7 +52,7 @@ class LinearRegression(BaseEstimator):
         """
         if self.include_intercept_:
             new_col = np.full(X.shape[0], 1)
-            np.insert(X, 0, new_col, axis=1)
+            X=np.insert(X, 0, new_col, axis=1)
         pseudo_inv_mat = np.linalg.pinv(X)
         self.coefs_ = pseudo_inv_mat @ y
 
@@ -71,6 +71,9 @@ class LinearRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
+        if self.include_intercept_:
+            new_col = np.full(X.shape[0], 1)
+            X=np.insert(X, 0, new_col, axis=1)
         return X @ self.coefs_
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
