@@ -73,12 +73,26 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    raise NotImplementedError()
+    values, weights=[],[]
+    def callback(value,weight):
+        values.append(value)
+        weights.append(weight)
+    return callback,values,weights
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
-    raise NotImplementedError()
+    l1=L1(init)
+    l2=L2(init)
+    gd=GradientDescent(get_gd_state_recorder_callback()[0])
+    gd.fit(l1,None,None)
+    l1_weights=get_gd_state_recorder_callback()[2]
+    plot_descent_path(l1,l1_weights,"Decent path for L1")
+    gd.fit(l2, None, None)
+    l2_weights=get_gd_state_recorder_callback()[2]
+    plot_descent_path(l2,l1_weights,"Decent path for L2")
+
+
 
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),

@@ -120,21 +120,29 @@ class GradientDescent:
 
         """
         f.weights=np.random.randint((X.shape[1]))
-        iter=0
-        weights_arr=[]
+        iter=1
+        sum_weights=f.weights
+        best_weight=f.weights
+        best_loss=f.compute_output()
         while iter<self.max_iter_:
             eta=self.learning_rate_.lr_step(iter)
             new_w=f.weights-eta*f.compute_jacobian()
-            weights_arr.append(f.weights)
+            delta=new_w-f.weights
             f.weights=new_w
-            if np.abs(new_w-f.weights)<self.tol_:
+            sum_weights+=f.weights
+            if f.compute_output()<best_loss:
+                best_loss=f.compute_output()
+                best_weight=f.weights
+
+            if np.abs(delta)<self.tol_:
                 break
+
+            self.callback_([self, f.weights, f.compute_output(), f.compute_jacobian(), iter, eta, delta])
             iter+=1
-            self.callback_(self, f.weights)
         if self.out_type_=="last":
             return f.weights
         if self.out_type_=="best":
-            return np.min(weights_arr)
+            return best_weight
         else:
-            return np.average(weights_arr)
+            return sum_weights/iter
 
