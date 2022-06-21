@@ -78,7 +78,7 @@ class L1(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        np.linalg.norm(self.weights)
+        return np.sum(np.abs(self.weights))
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """

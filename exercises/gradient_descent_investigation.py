@@ -74,23 +74,39 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
         Recorded parameters
     """
     values, weights=[],[]
-    def callback(value,weight):
-        values.append(value)
-        weights.append(weight)
+    def callback(self,**kwargs):
+        values.append(kwargs['val'])
+        weights.append(kwargs['weights'])
     return callback,values,weights
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
+
     l1=L1(init)
+    callback_f1=get_gd_state_recorder_callback()
+    gd1=GradientDescent(callback=callback_f1[0],learning_rate=FixedLR(etas[2]))
+    gd1.fit(l1,None,None)
+    l1_weights=callback_f1[2]
+    fig1=plot_descent_path(L1,np.array(l1_weights),"Decent path for L1")
+    fig1.show()
+
     l2=L2(init)
-    gd=GradientDescent(get_gd_state_recorder_callback()[0])
-    gd.fit(l1,None,None)
-    l1_weights=get_gd_state_recorder_callback()[2]
-    plot_descent_path(l1,l1_weights,"Decent path for L1")
-    gd.fit(l2, None, None)
-    l2_weights=get_gd_state_recorder_callback()[2]
-    plot_descent_path(l2,l1_weights,"Decent path for L2")
+    callback_f2=get_gd_state_recorder_callback()
+    gd2=GradientDescent(callback=callback_f2[0],learning_rate=FixedLR(etas[2]))
+    gd2.fit(l2, None, None)
+    l2_weights=callback_f2[2]
+    fig2=plot_descent_path(L2,np.array(l2_weights),"Decent path for L2")
+    fig2.show()
+
+    fig3 = go.Figure(layout=go.Layout(title=f"The convergence rate- L1 vs L2, eta= {etas[2]}"))
+    fig3.add_trace(go.Scatter(x=np.arange(len(l1_weights)), y=callback_f1[1],
+                             mode='markers',
+                             name='L1'))
+    fig3.add_trace(go.Scatter(x=np.arange(len(l2_weights)), y=callback_f2[1],
+                              mode='markers',
+                              name='L2'))
+    fig3.show()
 
 
 
@@ -155,5 +171,5 @@ def fit_logistic_regression():
 if __name__ == '__main__':
     np.random.seed(0)
     compare_fixed_learning_rates()
-    compare_exponential_decay_rates()
-    fit_logistic_regression()
+    #compare_exponential_decay_rates()
+    #fit_logistic_regression()
